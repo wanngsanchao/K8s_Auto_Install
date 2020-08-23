@@ -1,0 +1,9 @@
+---
+- hosts: nodes
+  tasks:
+   - name: "Step1: 开始拷贝k8s节点组件安装包到node节点"
+     copy: "remote_src=no src=~/kubernetesSoft.tar.gz dest=/tmp force=yes"
+   - name: "Step2: 开始拷贝k8s节点组件安装脚本到node节点"
+     copy: "remote_src=no src=~/node.sh dest=/tmp force=yes"
+   - name: "Step3: 开始为节点安装k8s组件"
+     shell: /usr/bin/sh /tmp/node.sh
