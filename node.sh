@@ -1,6 +1,6 @@
 #!/bin/sh
 #description install kubelet&docker
-#date 2020-03-12
+#date 2020-08-12
 #Author wsc
 #将现在好的文件放到master的tmp目录下即可
 #tar -zxvf /tmp/kubernetes-server-linux-amd64.tar.gz /tmp
