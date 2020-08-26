@@ -52,7 +52,7 @@ systemctl status etcd.service
 #测试etcd服务
 etcdctl cluster-health
 #配置flannel的网络模式
-etcdctl put /coreos.com/network/config '{"Network":"172.1.0.0/16","Backend":{"Type":"vxlan"}}'
+etcdctl set /coreos.com/network/config '{"Network":"172.1.0.0/16","Backend":{"Type":"vxlan"}}'
 #读取flannel的网络配置文件
 etcdctl get /coreos.com/network/config
 
