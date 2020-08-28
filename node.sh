@@ -1,6 +1,6 @@
 #!/bin/sh
 #description install kubelet&docker
-#date 2020-08-12
+#date 2020-03-12
 #Author wsc
 #将现在好的文件放到master的tmp目录下即可
 #tar -zxvf /tmp/kubernetes-server-linux-amd64.tar.gz /tmp
@@ -18,7 +18,46 @@ swapoff -a
 echo -e "#####################################解压KubernetesSoft文件#####################################\n"
 tar -zxvf $softdir/kubernetesSoft.tar.gz -C $softdir
 
-echo -e "#####################################step1.安装docker#####################################\n"
+echo -e "#####################################step1.安装flanneled#####################################\n"
+#解压docker二进制文件
+#将docker的二进制文件放到/usr/bin中
+mv $softdir/kubernetesSoft/node/bin/{flanneld,mk-docker-opts.sh} /usr/bin
+#创建flanneled配置文件目录
+mkdir -p /etc/kubernetes
+#通过mk-docker-opts.sh创建docker启动时所需要的网络参数，这个网络参数将会凡在下面的文件中
+mkdir -p /run/flannel
+#创建flanneled服务的配置文件,有个坑的地方下面的-etcd-prefix=/coreos.com/network因为flannel会自动加载，
+#如果key的结尾有个config,那么就不需要添加一个config
+cat >/etc/kubernetes/flanneld.conf<<EOF
+FLANNEL_OPTIONS="--etcd-endpoints=http://$masterIP:2379 --ip-masq=true --etcd-prefix=/coreos.com/network/"
+EOF
+#创建flanneld的system的服务文件
+cat >/usr/lib/systemd/system/flanneld.service <<EOF
+[Unit]
+Description=Flanneld overlay address etcd agent
+After=network-online.target network.target
+Before=docker.service
+
+[Service]
+Type=notify
+EnvironmentFile=/etc/kubernetes/flanneld.conf
+ExecStart=/usr/bin/flanneld \$FLANNEL_OPTIONS
+#flannled启动之后根据flannnel从etcd获取到vxlan网段信息生效docker启动的网络参数信息,文件会默认生成到/run/docker_opts.env
+ExecStartPost=/usr/bin/mk-docker-opts.sh -c
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+#刷新system管理文件
+systemctl daemon-reload
+#启动flanned服务
+systemctl start flanneld
+#检查flanneld服务状态
+systemctl enable flanneld
+
+echo -e "#####################################Step2.安装docker#####################################\n"
 #解压docker二进制文件
 #将docker的二进制文件放到/usr/bin中
 mv $softdir/kubernetesSoft/node/bin/docker/* /usr/bin
@@ -47,7 +86,8 @@ Type=notify
 # the default is not to use systemd for cgroups because the delegate issues still
 # exists and systemd currently does not support the cgroup feature set required
 # for containers run by docker
-ExecStart=/usr/bin/dockerd
+EnvironmentFile=/run/docker_opts.env
+ExecStart=/usr/bin/dockerd \$DOCKER_OPTS
 ExecReload=/bin/kill -s HUP \$MAINPID
 # Having non-zero Limit*s causes performance problems due to accounting overhead
 # in the kernel. We recommend using cgroups to do container-local accounting.
@@ -73,7 +113,7 @@ systemctl start docker
 systemctl status docker
 #设置docker的开机自启
 systemctl enable docker
-echo -e "#####################################安装step2.kubelet#####################################\n"
+echo -e "#####################################安装step3.kubelet#####################################\n"
 mv $softdir/kubernetesSoft/node/bin/kubelet /usr/bin/
 mv $softdir/kubernetesSoft/node/bin/kube-proxy /usr/bin/
 #创建配置文件目录
@@ -116,7 +156,7 @@ systemctl enable kubelet.service
 #查看kubelet.service服务状态
 systemctl status kubelet.service
 
-echo -e "#####################################安装step3.kube-proxy#####################################\n"
+echo -e "#####################################安装step4.kube-proxy#####################################\n"
 # 复制文件到Path目录
 mv $softdir/kubernetesSoft/node/bin/kube-proxy /usr/bin/
 # 创建配置文件目录，单独使用步骤脚本时不能省略
