@@ -49,12 +49,8 @@ systemctl start etcd.service
 systemctl enable ectd.service
 #查看etcd服务状态
 systemctl status etcd.service
-#测试etcd服务
-etcdctl cluster-health
 #配置flannel的网络模式
-etcdctl set /coreos.com/network/config '{"Network":"172.1.0.0/16","Backend":{"Type":"vxlan"}}'
-#读取flannel的网络配置文件
-etcdctl get /coreos.com/network/config
+etcdctl --endpoints=http://$masyerIP:2379 set /coreos.com/network/config '{"Network": "172.16.0.0/16", "SubnetLen": 24, "SubnetMin": "172.16.1.0","SubnetMax": "172.16.5.0", "Backend": {"Type": "vxlan"}}'
 
 echo -e "#####################################Step2.安装kube-apiserver#####################################\n"
 
@@ -64,7 +60,7 @@ mv $softdir/kubernetesSoft/master/bin/kube-apiserver /usr/bin/
 mkdir -p /etc/kubernetes && mkdir -p /var/log/kubernetes/kube-apiserver
 #创建/etc/kubernetes/apiserver配置文件
 cat >/etc/kubernetes/apiserver <<EOF
-KUBE_API_ARGS="--etcd_servers=http://127.0.0.1:2379 --insecure-bind-address=0.0.0.0 --insecure-port=8080 --service-cluster-ip-range=10.10.0.0/16 --service-node-port-range=1-65535 --admission_control=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota --logtostderr=false --log-dir=/var/log/kubernetes/kube-apiserver --v=2"
+KUBE_API_ARGS="--etcd_servers=http://$masterIP:2379 --insecure-bind-address=0.0.0.0 --insecure-port=8080 --service-cluster-ip-range=10.10.0.0/16 --service-node-port-range=1-65535 --admission_control=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota --logtostderr=false --log-dir=/var/log/kubernetes/kube-apiserver --v=2"
 EOF
 #创建systemd服务配置文件usr/lib/systemd/system/etcd.service
 cat >/usr/lib/systemd/system/kube-apiserver.service <<EOF
