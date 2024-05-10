@@ -176,4 +176,4 @@ systemctl enable kube-scheduler.service
 systemctl status kube-scheduler.service
 
 echo -e "#####################################Step5.清理软件安装包#####################################\n"
-rm -rf $softdir/kubernetesSoft* $softdir/master.sh
+#rm -rf $softdir/kubernetesSoft* $softdir/master.sh

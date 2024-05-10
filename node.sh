@@ -197,4 +197,4 @@ systemctl enable kube-proxy.service
 systemctl status kube-proxy.service
 
 echo -e "#####################################清理安装包文件#####################################\n"
-rm -rf $softdir/kubernetesSoft* $softdir/node.sh
+#rm -rf $softdir/kubernetesSoft* $softdir/node.sh
