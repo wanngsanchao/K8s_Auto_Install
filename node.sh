@@ -5,7 +5,7 @@
 
 #关闭防火墙、se、内存交换
 nodename=$(hostname)
-masterIP=$(cat /etc/hosts | grep master | awk '{print $1}')
+masterIP=$1
 softdir="/tmp"
 
 systemctl stop firewalld && systemctl disable firewalld

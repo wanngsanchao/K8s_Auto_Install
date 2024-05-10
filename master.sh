@@ -5,8 +5,7 @@ systemctl stop firewalld && systemctl disable firewalld
 setenforce 0 && sed -i 's/SELINUX=enabled/SELINUX=disabled/' /etc/selinux/config 
 swapoff -a
 
-mastername=$(hostname)
-masterIP=$(cat /etc/hosts | grep master | awk '{print $1}')
+masterIP=$1
 softdir="/tmp"
 
 echo -e "#####################################解压KubernetesSoft文件#####################################\n"
@@ -50,7 +49,7 @@ systemctl enable ectd.service
 #查看etcd服务状态
 systemctl status etcd.service
 #配置flannel的网络模式
-etcdctl --endpoints=http://$masyerIP:2379 set /coreos.com/network/config '{"Network": "172.16.0.0/16", "SubnetLen": 24, "SubnetMin": "172.16.1.0","SubnetMax": "172.16.5.0", "Backend": {"Type": "vxlan"}}'
+etcdctl --endpoints=http://$masterIP:2379 set /coreos.com/network/config '{"Network": "172.16.0.0/16", "SubnetLen": 24, "SubnetMin": "172.16.1.0","SubnetMax": "172.16.5.0", "Backend": {"Type": "vxlan"}}'
 
 echo -e "#####################################Step2.安装kube-apiserver#####################################\n"
 

@@ -1,17 +1,21 @@
 ---
 - hosts: nodes
+  vars_files:
+    - masterIP.yaml
   tasks:
    - name: "Step1: 开始拷贝k8s节点组件安装包到node节点"
      copy: "remote_src=no src=./kubernetesSoft.tar.gz dest=/tmp force=yes"
    - name: "Step2: 开始拷贝k8s节点组件安装脚本到node节点"
      copy: "remote_src=no src=./node.sh dest=/tmp force=yes"
    - name: "Step3: 开始为节点安装k8s组件"
-     shell: /usr/bin/sh /tmp/node.sh
+     shell: /usr/bin/sh /tmp/node.sh {{masterIP}}
 - hosts: masters
+  vars_files:
+    - masterIP.yaml
   tasks:
    - name: "Step1: 开始拷贝k8s节点组件安装包到master节点"
      copy: "remote_src=no src=./kubernetesSoft.tar.gz dest=/tmp force=yes"
    - name: "Step2: 开始拷贝k8s master节点装包文件到master节点"
      copy: "remote_src=no src=./master.sh dest=/tmp force=yes"
    - name: "Step3: 开始为master节点安装k8s master组件"
-     shell: /usr/bin/sh /tmp/master.sh
+     shell: /usr/bin/sh /tmp/master.sh {{masterIP}}
